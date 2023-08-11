@@ -16,16 +16,17 @@
           <p className="{styles.timer}">{seconds}</p>
           : null}-->
           <button
-            @click="changeRecordingStatus('recording')"
+            @click="startRecording()"
             type="button"
             className="{styles.recordbutton}"
           >
-            <img
+            <p>Start recording</p>
+            <!--<img
               height="30em"
               position="absolute"
               src="{playIcon}"
               alt="startRecording"
-            />
+            />-->
           </button>
         </div>
 
@@ -39,31 +40,19 @@
               ></Countdown>-->
         </div>
         <div v-if="recordingStatus === 'recording'">
-          <p className="{styles.timer}">{seconds}</p>
-          <button
-            className="{styles.pausebutton}"
-            onClick="{pauseRecording}"
-            type="button"
-          >
-            <img height="30em" src="{pauseIcon}" alt="pauseRecording" />
+          <!--<p className="{styles.timer}">{seconds}</p>-->
+          <button @click="pauseRecording" type="button">
+            <p>pause</p>
+            <!-- <img height="30em" src="{pauseIcon}" alt="pauseRecording" />-->
           </button>
-          <button
-            className="{styles.recordbutton}"
-            onClick="{stopRecording}"
-            type="button"
-          >
-            <img height="30em" src="{stopIcon}" alt="stopRecording" />
+          <button @click="stopRecording" type="button">
+            <p>stop</p>
+            <!--<img height="30em" src="{stopIcon}" alt="stopRecording" />-->
           </button>
         </div>
         <div v-if="recordedVideo" className="{styles.recordedplayer}">
-          <video className="recorded" src="{recordedVideo}" controls></video>
-          <a
-            className="{styles.opencamerabutton}"
-            download
-            href="{recordedVideo}"
-          >
-            Download Recording
-          </a>
+          <video className="recorded" :src="recordedVideo" controls></video>
+          <a download :href="recordedVideo"> Download Recording </a>
         </div>
       </div>
     </main>
@@ -71,13 +60,15 @@
 </template>
 
 <script>
+import { ref } from "vue";
+
 export default {
   name: "Recorder",
   components: {},
   data() {
     return {
       permission: false,
-      mediaRecorder: null,
+      mediaRecorder: ref(null),
       recordingStatus: "inactive",
       stream: null,
       videoChunks: [],
@@ -99,6 +90,12 @@ export default {
     },
     changeStream(value) {
       this.stream = value;
+    },
+    changeVideoChunks(value) {
+      this.videoChunks = value;
+    },
+    changeMediaRecorder(value) {
+      this.mediaRecorder = value;
     },
     async getCameraPermission() {
       this.changeRecordedVideo(null);
@@ -135,8 +132,6 @@ export default {
           this.changeStream(combinedStream);
           //set videostream to live feed player
           this.$refs.liveVideoFeed.srcObject = combinedStream;
-
-          console.log("youve reached the end");
         } catch (err) {
           alert(err.message);
         }
@@ -144,51 +139,51 @@ export default {
         alert("The MediaRecorder API is not supported in your browser.");
       }
     },
-    beforeDestroy() {
-      if (this.videoStream) {
-        this.videoStream.getTracks().forEach((track) => track.stop());
-      }
-    },
 
-    startRecording: async () => {
+    async startRecording() {
       var mimeType = "video/webm";
-      setRecordingStatus("recording");
-      if (!mediaRecorder.current) {
-        const media = new MediaRecorder(stream, { mimeType });
-        mediaRecorder.current = media;
+      this.changeRecordingStatus("recording");
+      if (!this.mediaRecorder) {
+        const media = new MediaRecorder(this.stream, { mimeType });
+        this.changeMediaRecorder(media);
+        console.log(this.mediaRecorder);
       }
-      if (mediaRecorder.current.state === "paused") {
-        mediaRecorder.current.resume();
+      if (this.mediaRecorder.state === "paused") {
+        this.mediaRecorder.resume();
       } else {
-        mediaRecorder.current.start();
+        this.mediaRecorder.start();
       }
-      start();
+      //start();
       let localVideoChunks = [];
-      mediaRecorder.current.ondataavailable = (event) => {
+      this.mediaRecorder.ondataavailable = (event) => {
         if (typeof event.data === "undefined") return;
         if (event.data.size === 0) return;
         localVideoChunks.push(event.data);
       };
-      setVideoChunks(localVideoChunks);
+      this.changeVideoChunks(localVideoChunks);
     },
 
-    pauseRecording: async () => {
-      setRecordingStatus("inactive");
-      mediaRecorder.current.pause();
-      pause();
+    async pauseRecording() {
+      this.changeRecordingStatus("inactive");
+      this.mediaRecorder.value.pause();
+      //pause();
     },
 
-    stopRecording: () => {
-      stop();
-      setPermission(false);
-      setRecordingStatus("inactive");
-      mediaRecorder.current.stop();
-      mediaRecorder.current.onstop = () => {
-        const videoBlob = new Blob(videoChunks, { type: mimeType });
-        const videoUrl = URL.createObjectURL(videoBlob);
-        setRecordedVideo(videoUrl);
-        setVideoChunks([]);
-      };
+    stopRecording() {
+      this.changePermission(false);
+      this.changeRecordingStatus("inactive");
+
+      if (this.mediaRecorder) {
+        // Check if mediaRecorder.value is not null
+        this.mediaRecorder.stop();
+
+        this.mediaRecorder.onstop = () => {
+          const videoBlob = new Blob(this.videoChunks, { type: "video/webm" }); // Use the correct mimeType
+          const videoUrl = URL.createObjectURL(videoBlob);
+          this.changeRecordedVideo(videoUrl);
+          this.changeVideoChunks([]);
+        };
+      }
     },
   },
 };
