@@ -17,9 +17,10 @@
         <video v-if="!recordedVideo" ref="liveVideoFeed" autoPlay muted></video>
 
         <div v-if="permission && recordingStatus === 'inactive'">
-          <!--{seconds !== 0 ?
-          <p className="{styles.timer}">{seconds}</p>
-          : null}-->
+          <div>
+            <Stopwatch v-if="currentTime != 0" :current-time="currentTime" />
+          </div>
+
           <button
             @click="changeRecordingStatus('preparing')"
             type="button"
@@ -34,14 +35,14 @@
         </div>
 
         <div v-if="recordingStatus === 'preparing'">
-          <!-- {seconds !== 0 ? <p className={styles.timer}>{seconds}</p> : null}-->
+          <Stopwatch v-if="currentTime != 0" :current-time="currentTime" />
           <count-down-timer
             class="countdown"
             @countdown-complete="startRecording"
           ></count-down-timer>
         </div>
         <div v-if="recordingStatus === 'recording'">
-          <!--<p className="{styles.timer}">{seconds}</p>-->
+          <Stopwatch :current-time="currentTime" />
           <button @click="pauseRecording" type="button" class="pausebutton">
             <img
               style="position: absolute; height: 2.5em"
@@ -71,10 +72,11 @@
 <script>
 import { ref } from "vue";
 import CountDownTimer from "./CountDownTimer.vue";
+import Stopwatch from "./Stopwatch.vue";
 
 export default {
   name: "Recorder",
-  components: { CountDownTimer },
+  components: { CountDownTimer, Stopwatch },
   data() {
     return {
       permission: false,
@@ -83,12 +85,23 @@ export default {
       stream: null,
       videoChunks: [],
       recordedVideo: null,
-
-      //seconds, start, pause, reset, running, stop : useTimer()
+      startTime: 0,
+      currentTime: 0, // Add currentTime data property
     };
   },
 
   methods: {
+    startTimer() {
+      this.timerInterval = setInterval(() => {
+        this.currentTime += 10;
+      }, 10);
+    },
+    stopTimer() {
+      clearInterval(this.timerInterval);
+    },
+    resetTimer() {
+      this.currentTime = 0;
+    },
     changeRecordingStatus(value) {
       this.recordingStatus = value;
     },
@@ -149,7 +162,6 @@ export default {
         alert("The MediaRecorder API is not supported in your browser.");
       }
     },
-
     async startRecording() {
       var mimeType = "video/webm";
       this.changeRecordingStatus("recording");
@@ -162,7 +174,7 @@ export default {
       } else {
         this.mediaRecorder.start();
       }
-      //start();
+      this.startTimer();
       let localVideoChunks = [];
       this.mediaRecorder.ondataavailable = (event) => {
         if (typeof event.data === "undefined") return;
@@ -173,12 +185,14 @@ export default {
     },
 
     async pauseRecording() {
+      this.stopTimer();
       this.changeRecordingStatus("inactive");
       this.mediaRecorder.pause();
-      //pause();
     },
 
     stopRecording() {
+      this.stopTimer();
+      this.resetTimer();
       this.changePermission(false);
       this.changeRecordingStatus("inactive");
 
