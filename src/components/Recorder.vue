@@ -2,31 +2,30 @@
   <div>
     <h2>Video Recorder</h2>
     <main>
-      <div>
-        <button v-if="!permission" @click="getCameraPermission" type="button">
+      <div class="videocontrols">
+        <button
+          v-if="!permission"
+          @click="getCameraPermission"
+          type="button"
+          class="opencamerabutton"
+        >
           Open camera
         </button>
       </div>
 
-      <div>
+      <div class="videoplayer">
         <video v-if="!recordedVideo" ref="liveVideoFeed" autoPlay muted></video>
 
         <div v-if="permission && recordingStatus === 'inactive'">
           <!--{seconds !== 0 ?
           <p className="{styles.timer}">{seconds}</p>
           : null}-->
-          <button
-            @click="startRecording()"
-            type="button"
-            className="{styles.recordbutton}"
-          >
-            <p>Start recording</p>
-            <!--<img
-              height="30em"
-              position="absolute"
-              src="{playIcon}"
+          <button @click="startRecording()" type="button" class="recordbutton">
+            <img
+              style="position: absolute; height: 2.5em"
+              src="@/assets/playicon.png"
               alt="startRecording"
-            />-->
+            />
           </button>
         </div>
 
@@ -41,18 +40,26 @@
         </div>
         <div v-if="recordingStatus === 'recording'">
           <!--<p className="{styles.timer}">{seconds}</p>-->
-          <button @click="pauseRecording" type="button">
-            <p>pause</p>
-            <!-- <img height="30em" src="{pauseIcon}" alt="pauseRecording" />-->
+          <button @click="pauseRecording" type="button" class="pausebutton">
+            <img
+              style="position: absolute; height: 2.5em"
+              src="@/assets/pauseicon.png"
+              alt="pauseRecording"
+            />
           </button>
-          <button @click="stopRecording" type="button">
-            <p>stop</p>
-            <!--<img height="30em" src="{stopIcon}" alt="stopRecording" />-->
+          <button @click="stopRecording" type="button" class="recordbutton">
+            <img
+              style="position: absolute; height: 2.5em"
+              src="@/assets/stopicon.png"
+              alt="stopRecording"
+            />
           </button>
         </div>
-        <div v-if="recordedVideo" className="{styles.recordedplayer}">
+        <div v-if="recordedVideo" class="recordedplayer">
           <video className="recorded" :src="recordedVideo" controls></video>
-          <a download :href="recordedVideo"> Download Recording </a>
+          <a class="opencamerabutton" download :href="recordedVideo">
+            Download Recording
+          </a>
         </div>
       </div>
     </main>
@@ -192,5 +199,65 @@ export default {
 <style>
 main {
   position: relative;
+}
+.opencamerabutton {
+  border: none;
+  height: 25px;
+  background: linear-gradient(#fe623d, #ff3472);
+  font-size: 1.2em;
+  color: white;
+  margin-bottom: 1em;
+  border-radius: 10px;
+  padding: 0.4em;
+  padding-bottom: 1.2em;
+}
+.recordbutton {
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  position: absolute;
+  bottom: -17.5em;
+}
+.pausebutton {
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  position: absolute;
+  bottom: -17.5em;
+  left: 11.5em;
+}
+.logo {
+  width: 50p;
+  height: 50px;
+  float: left;
+}
+
+.videocontrols {
+  margin-bottom: 20px;
+}
+.videoplayer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.videoplayer,
+.recordedplayer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 200px;
+  width: 400px;
+  margin: auto;
+}
+.liveplayer {
+  height: 400px;
+  width: 800px;
+  margin-bottom: 30px;
+}
+.recordedplayer video {
+  height: 400px;
+  width: 800px;
+  margin-bottom: 1em;
 }
 </style>
