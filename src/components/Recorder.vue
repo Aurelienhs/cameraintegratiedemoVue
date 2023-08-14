@@ -20,7 +20,11 @@
           <!--{seconds !== 0 ?
           <p className="{styles.timer}">{seconds}</p>
           : null}-->
-          <button @click="startRecording()" type="button" class="recordbutton">
+          <button
+            @click="changeRecordingStatus('preparing')"
+            type="button"
+            class="recordbutton"
+          >
             <img
               style="position: absolute; height: 2.5em"
               src="@/assets/playicon.png"
@@ -30,13 +34,11 @@
         </div>
 
         <div v-if="recordingStatus === 'preparing'">
-          <!-- {seconds !== 0 ? <p className={styles.timer}>{seconds}</p> : null}
-
-              <Countdown
-                onComplete={startRecording}
-                className={styles.countdown}
-                date={Date.now() + 3000}
-              ></Countdown>-->
+          <!-- {seconds !== 0 ? <p className={styles.timer}>{seconds}</p> : null}-->
+          <count-down-timer
+            class="countdown"
+            @countdown-complete="startRecording"
+          ></count-down-timer>
         </div>
         <div v-if="recordingStatus === 'recording'">
           <!--<p className="{styles.timer}">{seconds}</p>-->
@@ -68,10 +70,11 @@
 
 <script>
 import { ref } from "vue";
+import CountDownTimer from "./CountDownTimer.vue";
 
 export default {
   name: "Recorder",
-  components: {},
+  components: { CountDownTimer },
   data() {
     return {
       permission: false,
@@ -153,7 +156,6 @@ export default {
       if (!this.mediaRecorder) {
         const media = new MediaRecorder(this.stream, { mimeType });
         this.changeMediaRecorder(media);
-        console.log(this.mediaRecorder);
       }
       if (this.mediaRecorder.state === "paused") {
         this.mediaRecorder.resume();
@@ -172,7 +174,7 @@ export default {
 
     async pauseRecording() {
       this.changeRecordingStatus("inactive");
-      this.mediaRecorder.value.pause();
+      this.mediaRecorder.pause();
       //pause();
     },
 
@@ -259,5 +261,12 @@ main {
   height: 400px;
   width: 800px;
   margin-bottom: 1em;
+}
+.countdown {
+  position: absolute;
+  top: 4em;
+  left: 4em;
+  color: white;
+  font-size: 3em;
 }
 </style>
